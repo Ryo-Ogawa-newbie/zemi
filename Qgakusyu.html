@@ -1,0 +1,52 @@
+import numpy as np
+# 格子世界のサイズと報酬の定義
+N = 20  # グリッドの辺の長さ
+GRID_SIZE = (N, N)
+REWARDS = np.zeros(GRID_SIZE)
+REWARDS[N-1, N-1] = 1  # ゴールに到達したときの報酬
+# Qテーブルの初期化
+Q = np.zeros((GRID_SIZE[0], GRID_SIZE[1], 4))
+# エピソード数や学習率、割引率などの設定
+EPISODES = 1000
+LEARNING_RATE = 0.1
+DISCOUNT_FACTOR = 0.9
+EPSILON = 0.1
+# 行動の定義（上: 0, 右: 1, 下: 2, 左: 3）
+ACTIONS = [0, 1, 2, 3]
+# Q学習の実行
+for episode in range(EPISODES):
+    # エージェントの初期位置
+    state = (0, 0)
+
+    # エージェントがゴールに到達するまでのステップ数をカウント
+    steps = 0
+
+    while state != (N - 1, N - 1):
+        # ε-greedy方策に基づいて行動を選択
+        if np.random.uniform() < EPSILON:
+            action = np.random.choice(ACTIONS)
+        else:
+            action = np.argmax(Q[state[0]][state[1]])
+
+        # 行動を実行し、次の状態と報酬を観測
+        next_state = (
+            max(0, min(state[0] + (action - 1) // 2, N - 1)),
+            max(0, min(state[1] + (action - 2) % 2, N - 1))
+        )
+        reward = REWARDS[next_state]
+
+        # Q値を更新
+        Q[state[0]][state[1]][action] += LEARNING_RATE * (
+            reward + DISCOUNT_FACTOR * np.max(Q[next_state[0]][next_state[1]]) - Q[state[0]][state[1]][action]
+        )
+
+        # 状態を更新
+        state = next_state
+
+        # ステップ数を更新
+        steps += 1
+    # エピソードごとの結果を表示
+    print(f"Episode {episode + 1}: Steps taken = {steps}")
+    # 学習結果を表示
+print("Learned Q-values:")
+print(Q)
